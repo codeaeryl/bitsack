@@ -1,0 +1,2 @@
+# bitsack
+Algorithmic Strategies Project
