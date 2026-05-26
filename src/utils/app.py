@@ -103,3 +103,20 @@ with col2:
     m1.metric(label="Total Profit Optimal", value="25.40") # Angka dummy
     m2.metric(label="Waktu Eksekusi", value="12 ms")      # Angka dummy
     m3.metric(label="Node Dikunjungi", value="45 Node")   # Angka dummy
+
+    # --- TAMBAHAN BARU UNTUK FITUR 12 ---
+    st.markdown("#### 🏆 Solusi Optimal (Barang Terpilih)")
+    
+    # Dummy data barang yang berhasil dimasukkan ke dalam tas
+    dummy_solusi = pd.DataFrame([
+        {"Nama Barang": "apple", "Berat (W)": 1.2, "Profit (P)": "$3.50"},
+        {"Nama Barang": "dragonfruit", "Berat (W)": 1.5, "Profit (P)": "$8.75"},
+        {"Nama Barang": "cherry", "Berat (W)": 0.3, "Profit (P)": "$5.00"}
+    ])
+    
+    # Menampilkan tabel barang terpilih dengan warna hijau (success)
+    st.success("Berdasarkan algoritma, ini adalah kombinasi barang terbaik yang muat di dalam tas!")
+    st.dataframe(dummy_solusi, hide_index=True, use_container_width=True)
+    # ------------------------------------
+
+    st.markdown("---")
