@@ -1,31 +1,10 @@
-"""
-Handles loading data from various sources
-"""
+import numpy as np
 
-def _try_numeric(value: str) -> str | int | float:
+def load_csv(file_path: str) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Attempt to cast a string to int, then float. Return original string on failure.
+    Load CSV file using NumPy.
+    Returns:
+        tuple[np.ndarray, np.ndarray, np.ndarray]: (label, weight, profit)
     """
-    try:
-        num = float(value)
-        if num == int(num):
-            return int(num)
-        return num
-    except (ValueError, OverflowError):
-        return value
-
-
-def load_csv(file_path: str) -> list[list[str | int | float]]:
-    """
-    Load CSV file into a list object.
-    Numeric values are automatically cast to int or float.
-    """
-    import csv
-
-    data = []
-
-    with open(file_path, 'r') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            data.append([_try_numeric(cell) for cell in row])
-    return data
+    data = np.genfromtxt(file_path, delimiter=',', dtype=None, names=True, encoding='utf-8')
+    return data['label'], data['weight'].astype(float), data['profit'].astype(float)

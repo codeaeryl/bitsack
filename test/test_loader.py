@@ -4,6 +4,7 @@ Tests for src/utils/loader.py
 import os
 import unittest
 import sys
+import numpy as np
 
 # Add project root to path to import src modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -17,73 +18,67 @@ class TestLoadCsv(unittest.TestCase):
     """Test suite for the load_csv function using data/test.csv."""
 
     def setUp(self):
-        self.data = load_csv(TEST_CSV_PATH)
+        self.labels, self.weights, self.profits = load_csv(TEST_CSV_PATH)
 
     # --- Structure tests ---
 
-    def test_returns_list(self):
-        """load_csv should return a list."""
-        self.assertIsInstance(self.data, list)
+    def test_returns_numpy_arrays(self):
+        """load_csv should return a tuple of 3 numpy arrays."""
+        self.assertIsInstance(self.labels, np.ndarray)
+        self.assertIsInstance(self.weights, np.ndarray)
+        self.assertIsInstance(self.profits, np.ndarray)
 
     def test_row_count(self):
-        """Should contain 11 rows: 1 header + 10 data rows."""
-        self.assertEqual(len(self.data), 11)
-
-    def test_column_count(self):
-        """Every row should have exactly 3 columns."""
-        for row in self.data:
-            self.assertEqual(len(row), 3)
-
-    # --- Header tests ---
-
-    def test_header_values(self):
-        """First row should be the header: label, weight, profit."""
-        self.assertEqual(self.data[0], ['label', 'weight', 'profit'])
+        """Should contain 10 elements per array (header is excluded)."""
+        self.assertEqual(len(self.labels), 10)
+        self.assertEqual(len(self.weights), 10)
+        self.assertEqual(len(self.profits), 10)
 
     # --- Data type tests ---
 
     def test_labels_are_strings(self):
-        """Label column should remain as strings."""
-        for row in self.data:
-            self.assertIsInstance(row[0], str)
+        """Label column should contain string type values."""
+        for val in self.labels:
+            self.assertIsInstance(val, (str, np.str_))
 
-    def test_weights_are_numeric(self):
-        """Weight column (data rows) should be int or float."""
-        for row in self.data[1:]:
-            self.assertIsInstance(row[1], (int, float))
+    def test_weights_are_floats(self):
+        """Weight column should be float64 values."""
+        self.assertTrue(np.issubdtype(self.weights.dtype, np.floating))
 
-    def test_profits_are_numeric(self):
-        """Profit column (data rows) should be int or float."""
-        for row in self.data[1:]:
-            self.assertIsInstance(row[2], (int, float))
+    def test_profits_are_floats(self):
+        """Profit column should be float64 values."""
+        self.assertTrue(np.issubdtype(self.profits.dtype, np.floating))
 
     # --- Content spot-checks ---
 
     def test_first_data_row(self):
         """Verify the first data row matches expected values."""
-        self.assertEqual(self.data[1], ['apple', 1.2, 3.5])
+        self.assertEqual(self.labels[0], 'apple')
+        self.assertAlmostEqual(self.weights[0], 1.2)
+        self.assertAlmostEqual(self.profits[0], 3.5)
 
     def test_last_data_row(self):
         """Verify the last data row matches expected values."""
-        self.assertEqual(self.data[10], ['lemon', 0.7, 2.9])
+        self.assertEqual(self.labels[9], 'lemon')
+        self.assertAlmostEqual(self.weights[9], 0.7)
+        self.assertAlmostEqual(self.profits[9], 2.9)
 
     def test_labels_are_unique(self):
-        """All labels (excluding header) should be unique."""
-        labels = [row[0] for row in self.data[1:]]
-        self.assertEqual(len(labels), len(set(labels)))
+        """All labels should be unique."""
+        self.assertEqual(len(self.labels), len(set(self.labels)))
 
-    def test_integer_cast(self):
-        """Values like 5.00 should be cast to int, not float."""
-        # cherry has profit 5.00 → should become int 5
-        cherry_profit = self.data[3][2]
-        self.assertIsInstance(cherry_profit, int)
-        self.assertEqual(cherry_profit, 5)
+    def test_float_cast(self):
+        """Integer values in the CSV (like 5) should be cast/locked to floats."""
+        # cherry is at index 2, profit is listed as '5' in test.csv
+        cherry_profit = self.profits[2]
+        self.assertIsInstance(cherry_profit, (float, np.float64))
+        self.assertAlmostEqual(cherry_profit, 5.0)
 
     # --- Edge / error case ---
 
     def test_nonexistent_file_raises(self):
-        """load_csv should raise FileNotFoundError for a missing file."""
-        with self.assertRaises(FileNotFoundError):
+        """load_csv should raise FileNotFoundError or OSError for a missing file."""
+        with self.assertRaises((FileNotFoundError, OSError)):
             load_csv('nonexistent_file.csv')
 
 
