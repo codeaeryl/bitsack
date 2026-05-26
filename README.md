@@ -8,7 +8,9 @@ Algorithmic Strategies Final Project
 | 2472048 | Jayden Marvel Ethanael              |
 
 ## Project Structure
+```
 main
 └── dev
     ├── initialize
     └── loader
+```
