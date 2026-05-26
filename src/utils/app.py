@@ -36,9 +36,27 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.subheader("📦 Tabel Barang Input")
     if not df_barang.empty:
-        # Menampilkan dataframe interaktif
-        st.dataframe(df_barang, use_container_width=True)
-        st.caption(f"Total barang: {len(df_barang)} item")
+        st.markdown("💡 *Kamu bisa mengedit, menambah, atau menghapus baris.*")
+        
+        # MENGGUNAKAN DATA EDITOR (Tabel Interaktif)
+        edited_df = st.data_editor(
+            df_barang,
+            width="stretch",      # Memperbaiki warning dari Streamlit versi terbaru
+            num_rows="dynamic",   # Mengizinkan user menambah/menghapus baris (Coba klik tabelnya!)
+            hide_index=True,      # Menyembunyikan angka index bawaan agar lebih bersih
+            column_config={
+                "label": st.column_config.TextColumn(
+                    "Nama Barang (ID)", required=True
+                ),
+                "weight": st.column_config.NumberColumn(
+                    "Berat (W)", min_value=0.1, step=0.1, format="%.2f"
+                ),
+                "profit": st.column_config.NumberColumn(
+                    "Profit (P)", min_value=0.1, step=0.1, format="$%.2f"
+                )
+            }
+        )
+        st.caption(f"Total barang siap diproses: {len(edited_df)} item")
 
 # ==========================================
 # FITUR 12: PANEL SOLUSI & METRIK (DUMMY)
