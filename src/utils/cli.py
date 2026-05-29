@@ -2,11 +2,18 @@ import pandas as pd
 import os
 import time
 
-
 def jalankan_dfs(daftar_barang, kapasitas_w):
     items = [dict(item) for item in daftar_barang]
+    
+    # ---------------------------------------------------------
+    # PERBAIKAN (Calvin): Mencegah error ZeroDivisionError jika 
+    # suatu saat ada barang dengan berat (weight) 0.
+    # ---------------------------------------------------------
     for item in items:
-        item['ratio'] = item['profit'] / item['weight']
+        if item['weight'] > 0:
+            item['ratio'] = item['profit'] / item['weight']
+        else:
+            item['ratio'] = float('inf') # Prioritaskan barang gratis (berat 0) tapi berprofit
     
     items.sort(key=lambda x: x['ratio'], reverse=True)
     n = len(items)
@@ -60,16 +67,18 @@ def jalankan_dfs(daftar_barang, kapasitas_w):
         dfs(index + 1, current_weight, current_profit, current_items)
 
     dfs(0, 0, 0, [])
+    
+    # ---------------------------------------------------------
+    # PERBAIKAN (Calvin): Menghapus "execution_time_ms" dari return
+    # karena penghitungan waktu sudah dipindah ke fungsi run_cli() 
+    # agar lebih akurat membungkus keseluruhan proses algoritma.
+    # ---------------------------------------------------------
     return {
         "best_profit": round(best_profit, 2),
         "best_combination": best_combination,
         "nodes_visited": nodes_visited,
-        "execution_time_ms": round((time.time()) * 1000, 4), # Placeholder waktu awal
         "exploration_log": exploration_log
     }
-
-
-
 
 def run_cli():
     print("\n" + "="*40)
@@ -89,16 +98,18 @@ def run_cli():
         print(df_barang.to_string(index=False))
         
         print("\n" + "-"*40)
-        print("⚙️ Meneruskan data ke mesin algoritma Jayden...")
         
-        # Mengubah dataframe menjadi list of dictionary (Format yang diminta Jayden)
+        # ---------------------------------------------------------
+        # PERBAIKAN (Calvin): Menyesuaikan teks print out karena 
+        # pembagian tugas berubah (logika kini dipegang Calvin).
+        # ---------------------------------------------------------
+        print("⚙️ Meneruskan data ke mesin algoritma Calvin...")
+        
+        # Mengubah dataframe menjadi list of dictionary
         data_list = df_barang.to_dict(orient='records')
         
-        # Nanti Jayden tinggal memanggil fungsinya di sini
-        # contoh: hasil = jalankan_dfs(data_list, kapasitas=10)
-        
-        # === INTEGRASI LOGIKA CALVIN COCOK DENGAN DATA JAYDEN ===
-    # Mengirim data_list dari CSV ke fungsi dfs milik Calvin dengan Kapasitas W = 10
+        # === INTEGRASI LOGIKA CALVIN COCOK DENGAN DATA CSV ===
+        # Mengirim data_list dari CSV ke fungsi dfs milik Calvin dengan Kapasitas W = 10
         start_time = time.time()
         hasil = jalankan_dfs(data_list, kapasitas_w=10)
         end_time = time.time()
