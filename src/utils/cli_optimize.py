@@ -23,7 +23,11 @@ def run_cli_optimized():
     try:
         df_barang = pd.read_csv(csv_path)
         print(f"\n📦 Data Barang Input ({os.path.basename(csv_path)}):")
-        print(df_barang.to_string(index=False))
+        if len(df_barang) > 20:
+            print(df_barang.head(10).to_string(index=False))
+            print(f"... and {len(df_barang) - 10} more rows ...")
+        else:
+            print(df_barang.to_string(index=False))
         print("\n" + "-"*40)
         print("⚙️ Meneruskan data ke mesin modular algoritma...")
         
@@ -43,7 +47,12 @@ def run_cli_optimized():
         print(f"⏱️ Waktu Eksekusi       : {waktu_eksekusi_dfs:.4f} ms")
         print(f"👁️ Total Node Dikunjungi: {hasil_dfs['nodes_visited']} Node")
         print(f"💾 Peak Memory Usage    : {peak_mem_dfs / 1024:.2f} KB")
-        print(f"🎒 Barang Terpilih      : {[b['label'] for b in hasil_dfs['best_combination']]}")
+        
+        chosen_dfs = [b['label'] for b in hasil_dfs['best_combination']]
+        if len(chosen_dfs) > 20:
+            print(f"🎒 Barang Terpilih      : {chosen_dfs[:15]} ... (+ {len(chosen_dfs) - 15} more)")
+        else:
+            print(f"🎒 Barang Terpilih      : {chosen_dfs}")
         
         # Test Core DFS (Original)
         print("\n--- DFS Core (Original) ---")
@@ -61,7 +70,12 @@ def run_cli_optimized():
         print(f"⏱️ Waktu Eksekusi       : {waktu_eksekusi_core:.4f} ms")
         print(f"👁️ Total Node Dikunjungi: {hasil_core['nodes_visited']} Node")
         print(f"💾 Peak Memory Usage    : {peak_mem_core / 1024:.2f} KB")
-        print(f"🎒 Barang Terpilih      : {[b['label'] for b in hasil_core['best_combination']]}")
+        
+        chosen_core = [b['label'] for b in hasil_core['best_combination']]
+        if len(chosen_core) > 20:
+            print(f"🎒 Barang Terpilih      : {chosen_core[:15]} ... (+ {len(chosen_core) - 15} more)")
+        else:
+            print(f"🎒 Barang Terpilih      : {chosen_core}")
         print("="*40 + "\n")
 
     except FileNotFoundError:
