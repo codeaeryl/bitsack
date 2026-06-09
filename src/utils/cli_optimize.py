@@ -8,15 +8,22 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 sys.setrecursionlimit(15000)
 from optimize.dfs import jalankan_dfs_modular as dfs_optimized
-from core.dfs import jalankan_dfs_modular as dfs_core
+from mp_optimize.dfs import jalankan_dfs_modular as dfs_parallel
 
 def run_cli_optimized():
+    KAPASITAS_W = 67.69
     print("\n" + "="*40)
     print("🎒 Knapsack 0/1 - Mode CLI (Optimised)")
     print("="*40)
 
     current_dir = os.path.dirname(__file__)
-    csv_path = os.path.join(current_dir, "../../data/data.csv")
+    # Use test.csv by default to avoid hangs on large datasets unless --full is requested
+    if "--full" in sys.argv:
+        csv_path = os.path.join(current_dir, "../../data/data.csv")
+    else:
+        csv_path = os.path.join(current_dir, "../../data/test.csv")
+        print("💡 Running with test.csv. Pass '--full' to run with data.csv.")
+
     if not os.path.exists(csv_path) or os.path.getsize(csv_path) == 0:
         csv_path = os.path.join(current_dir, "../../data/test.csv")
 
@@ -31,12 +38,37 @@ def run_cli_optimized():
         print("\n" + "-"*40)
         print("⚙️ Meneruskan data ke mesin modular algoritma...")
         
-        # Test Optimised DFS
-        print("\n--- DFS Optimised ---")
+        # Test Parallel DFS
+        print("\n--- DFS Parallel (Multiprocessed) ---")
         import tracemalloc
         tracemalloc.start()
         start_time = time.time()
-        hasil_dfs = dfs_optimized(df_barang, kapasitas_w=10)
+        hasil_parallel = dfs_parallel(df_barang, kapasitas_w=KAPASITAS_W)
+        end_time = time.time()
+        _, peak_mem_parallel = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        
+        waktu_eksekusi_parallel = (end_time - start_time) * 1000
+
+        print(f"📊 Total Profit Optimal : {hasil_parallel['best_profit']}")
+        print(f"⏱️ Waktu Eksekusi       : {waktu_eksekusi_parallel:.4f} ms")
+        print(f"👁️ Total Node Dikunjungi: {hasil_parallel['nodes_visited']} Node")
+        
+        total_weight_parallel = sum(b['weight'] for b in hasil_parallel['best_combination'])
+        print(f"⚖️ Total Bobot (Weight) : {total_weight_parallel:.2f} / {KAPASITAS_W}")
+        print(f"💾 Peak Memory Usage    : {peak_mem_parallel / 1024:.2f} KB")
+        
+        chosen_parallel = [b['label'] for b in hasil_parallel['best_combination']]
+        if len(chosen_parallel) > 20:
+            print(f"🎒 Barang Terpilih      : {chosen_parallel[:15]} ... (+ {len(chosen_parallel) - 15} more)")
+        else:
+            print(f"🎒 Barang Terpilih      : {chosen_parallel}")
+
+        # Test Optimised DFS
+        print("\n--- DFS Optimised ---")
+        tracemalloc.start()
+        start_time = time.time()
+        hasil_dfs = dfs_optimized(df_barang, kapasitas_w=KAPASITAS_W)
         end_time = time.time()
         _, peak_mem_dfs = tracemalloc.get_traced_memory()
         tracemalloc.stop()
@@ -46,6 +78,9 @@ def run_cli_optimized():
         print(f"📊 Total Profit Optimal : {hasil_dfs['best_profit']}")
         print(f"⏱️ Waktu Eksekusi       : {waktu_eksekusi_dfs:.4f} ms")
         print(f"👁️ Total Node Dikunjungi: {hasil_dfs['nodes_visited']} Node")
+        
+        total_weight_dfs = sum(b['weight'] for b in hasil_dfs['best_combination'])
+        print(f"⚖️ Total Bobot (Weight) : {total_weight_dfs:.2f} / {KAPASITAS_W}")
         print(f"💾 Peak Memory Usage    : {peak_mem_dfs / 1024:.2f} KB")
         
         chosen_dfs = [b['label'] for b in hasil_dfs['best_combination']]
@@ -54,28 +89,6 @@ def run_cli_optimized():
         else:
             print(f"🎒 Barang Terpilih      : {chosen_dfs}")
         
-        # Test Core DFS (Original)
-        print("\n--- DFS Core (Original) ---")
-        tracemalloc.start()
-        start_time = time.time()
-        data_list_core = df_barang.to_dict(orient='records')
-        hasil_core = dfs_core(data_list_core, kapasitas_w=10)
-        end_time = time.time()
-        _, peak_mem_core = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
-        
-        waktu_eksekusi_core = (end_time - start_time) * 1000
-
-        print(f"📊 Total Profit Optimal : {hasil_core['best_profit']}")
-        print(f"⏱️ Waktu Eksekusi       : {waktu_eksekusi_core:.4f} ms")
-        print(f"👁️ Total Node Dikunjungi: {hasil_core['nodes_visited']} Node")
-        print(f"💾 Peak Memory Usage    : {peak_mem_core / 1024:.2f} KB")
-        
-        chosen_core = [b['label'] for b in hasil_core['best_combination']]
-        if len(chosen_core) > 20:
-            print(f"🎒 Barang Terpilih      : {chosen_core[:15]} ... (+ {len(chosen_core) - 15} more)")
-        else:
-            print(f"🎒 Barang Terpilih      : {chosen_core}")
         print("="*40 + "\n")
 
     except FileNotFoundError:
