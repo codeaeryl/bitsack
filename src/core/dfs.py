@@ -17,8 +17,9 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
         nodes_visited += 1
         
         chosen_names = [item['label'] for item in current_items]
+        item_evaluasi = items[index]['label'] if index < n else "LEAF"
         exploration_log.append({
-            "node": nodes_visited, "weight": round(current_weight, 2),
+            "node": nodes_visited, "current_item": item_evaluasi, "weight": round(current_weight, 2),
             "profit": round(current_profit, 2), "chosen": chosen_names, "status": "Eksplorasi"
         })
         
