@@ -1,7 +1,13 @@
 import pandas as pd
 import os
+import sys
 import time
 import glob
+
+# Tambahkan root directory ke sys.path agar bisa import module 'src'
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Solusi: Menaikkan batas rekursi hingga 150.000 untuk mengakomodasi 100.000 barang di data.csv
+sys.setrecursionlimit(150000)
 
 def run_cli():
     print("\n" + "="*60)
@@ -94,6 +100,18 @@ def run_cli():
         
         waktu_eksekusi = (end_time - start_time) * 1000
 
+        # Menampilkan Langkah Eksplorasi (Fitur Wajib)
+        print("\n🔍 Langkah/Urutan Eksplorasi Node (10 Terakhir):")
+        print(f"{'Node':<8} | {'Item Evaluasi':<15} | {'Profit':<10} | {'Berat':<10} | {'Status'}")
+        print("-" * 80)
+        for log in hasil.get('exploration_log', [])[-10:]:
+            node_str = str(log.get('node', '?'))
+            item_str = str(log.get('current_item', '-'))
+            profit_str = str(log.get('profit', '?'))
+            weight_str = str(log.get('weight', '?'))
+            status_str = str(log.get('status', '?'))
+            print(f"{node_str:<8} | {item_str:<15} | {profit_str:<10} | {weight_str:<10} | {status_str}")
+
         # Menampilkan Output
         print("\n" + "="*60)
         print(f"✅ Status: Berhasil Dieksekusi via Mesin {nama_mesin}!")
@@ -101,7 +119,18 @@ def run_cli():
         print(f"📊 Total Profit Optimal : {hasil['best_profit']}")
         print(f"⏱️ Waktu Eksekusi       : {waktu_eksekusi:.4f} ms")
         print(f"👁️ Total Node Dikunjungi: {hasil['nodes_visited']} Node")
-        print(f"🎒 Barang Terpilih      : {[b['label'] for b in hasil['best_combination']]}")
+        
+        # 1. Tambahkan Total Bobot
+        total_weight = sum(b['weight'] for b in hasil['best_combination'])
+        print(f"⚖️ Total Bobot (Weight) : {total_weight:.2f} / {kapasitas_w}")
+        
+        # 2. Merapikan List Barang Terpilih
+        chosen_items = [b['label'] for b in hasil['best_combination']]
+        if len(chosen_items) > 20:
+            print(f"🎒 Barang Terpilih      : {chosen_items[:15]} ... (+ {len(chosen_items) - 15} more)")
+        else:
+            print(f"🎒 Barang Terpilih      : {chosen_items}")
+            
         print("="*60 + "\n")
 
     except FileNotFoundError:
