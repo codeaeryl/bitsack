@@ -163,6 +163,10 @@ with col2:
             # FITUR 12: PANEL SOLUSI & METRIK (DINAMIS)
             # ==========================================
             st.subheader("📊 Statistik Performa")
+            
+            if hasil.get('timeout'):
+                st.warning("⚠️ **WAKTU HABIS (TIMEOUT)!** Proses algoritma dihentikan paksa karena melebihi batas waktu (10 detik). Hasil di bawah ini mungkin belum optimal (belum selesai mengeksplorasi seluruh kemungkinan), melainkan hanya kombinasi terbaik yang berhasil ditemukan sejauh ini.")
+
             m1, m2, m3 = st.columns(3)
             m1.metric(label="Total Profit Optimal", value=f"{hasil['best_profit']}")
             m2.metric(label="Waktu Eksekusi", value=f"{waktu_eksekusi:.2f} ms")
