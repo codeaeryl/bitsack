@@ -48,7 +48,7 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
 
     nodes_visited = 0
     exploration_log = []
-    visualize = n <= 20
+    visualize = True
 
     # Local references for hot-loop performance
     pw = bound_calc._prefix_weight
@@ -65,19 +65,23 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
         current_node_id = nodes_visited
 
         if visualize:
-            # Logging (preserved from original)
-            chosen_names = [labels[i] for i in chosen]
-            current_item_name = labels[index] if index < n else "LEAF"
-            log_entry = {
-                "node": current_node_id,
-                "parent": parent_id,
-                "current_item": current_item_name,
-                "weight": round(cw, 2),
-                "profit": round(cp, 2),
-                "chosen": chosen_names,
-                "status": "Eksplorasi",
-            }
-            exploration_log.append(log_entry)
+            if len(exploration_log) > 1000:
+                visualize = False
+                exploration_log.clear()
+            else:
+                # Logging (preserved from original)
+                chosen_names = [labels[i] for i in chosen]
+                current_item_name = labels[index] if index < n else "LEAF"
+                log_entry = {
+                    "node": current_node_id,
+                    "parent": parent_id,
+                    "current_item": current_item_name,
+                    "weight": round(cw, 2),
+                    "profit": round(cp, 2),
+                    "chosen": chosen_names,
+                    "status": "Eksplorasi",
+                }
+                exploration_log.append(log_entry)
 
         if cp > best_profit:
             best_profit = cp
