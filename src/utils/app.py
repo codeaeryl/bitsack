@@ -116,6 +116,7 @@ with col2:
                         current_depth += 1
 
                 last_seen_at_depth = {}
+                node_map = {log['node']: log for log in hasil['exploration_log']}
                 
                 # Membangun pohon dari log eksplorasi (hanya jika data kecil)
                 for log in hasil['exploration_log']:
@@ -129,6 +130,8 @@ with col2:
                     # Logika warna node berdasarkan status
                     if "PRUNED" in status:
                         color = "lightpink" # Merah muda untuk cabang yang dipotong
+                    elif "TAKEN ALL" in status:
+                        color = "lightgreen" # Hijau untuk solusi terminal yang diambil semua
                     elif item_name == "LEAF":
                         color = "lightgreen" # Hijau untuk daun/ujung
                     else:
@@ -136,25 +139,32 @@ with col2:
                         
                     pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
                     
-                    # Rekonstruksi Garis (Edge) secara matematis tanpa parameter parent_node
-                    if depth > 0:
+                    # Rekonstruksi Garis (Edge) menggunakan parameter parent_node jika tersedia
+                    parent_id = log.get('parent')
+                    parent_log = None
+                    if parent_id is not None:
+                        parent_log = node_map.get(parent_id)
+                        
+                    if parent_log is None and depth > 0:
+                        # Fallback ke rekonstruksi matematis
                         parent_log = last_seen_at_depth.get(depth - 1)
-                        if parent_log is not None:
-                            parent_id = str(parent_log['node'])
+                        
+                    if parent_log is not None:
+                        parent_id_str = str(parent_log['node'])
+                        
+                        # Tentukan apakah cabang ini "Ambil" (x=1) atau "Skip" (x=0) berdasarkan jumlah barang di dalam tas
+                        if len(log['chosen']) > len(parent_log['chosen']):
+                            edge_label = " x=1"
+                            edge_color = "darkgreen"
+                        else:
+                            edge_label = " x=0"
+                            edge_color = "black"
                             
-                            # Tentukan apakah cabang ini "Ambil" (x=1) atau "Skip" (x=0) berdasarkan jumlah barang di dalam tas
-                            if len(log['chosen']) > len(parent_log['chosen']):
-                                edge_label = " x=1"
-                                edge_color = "darkgreen"
-                            else:
-                                edge_label = " x=0"
-                                edge_color = "black"
-                                
-                            edge_style = "dashed" if "PRUNED" in status else "solid"
-                            if "PRUNED" in status: edge_color = "red"
-                            
-                            pohon_dfs.edge(parent_id, node_id, label=edge_label, style=edge_style, color=edge_color, fontname="Arial", fontsize="9")
-                            
+                        edge_style = "dashed" if "PRUNED" in status else "solid"
+                        if "PRUNED" in status: edge_color = "red"
+                        
+                        pohon_dfs.edge(parent_id_str, node_id, label=edge_label, style=edge_style, color=edge_color, fontname="Arial", fontsize="9")
+                        
                     last_seen_at_depth[depth] = log
                         
                 st.graphviz_chart(pohon_dfs)

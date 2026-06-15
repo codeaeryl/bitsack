@@ -48,6 +48,7 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
 
     nodes_visited = 0
     exploration_log = []
+    visualize = n <= 20
 
     # Local references for hot-loop performance
     pw = bound_calc._prefix_weight
@@ -55,25 +56,28 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
     smw = bound_calc._suffix_min_weight
     bound_calculate = bound_calc.calculate
 
-    # Stack entries: (index, current_weight, current_profit, chosen_indices_tuple)
-    stack = [(0, 0.0, 0.0, ())]
+    # Stack entries: (index, current_weight, current_profit, chosen_indices_tuple, parent_node_id)
+    stack = [(0, 0.0, 0.0, (), None)]
 
     while stack:
-        index, cw, cp, chosen = stack.pop()
+        index, cw, cp, chosen, parent_id = stack.pop()
         nodes_visited += 1
+        current_node_id = nodes_visited
 
-        # Logging (preserved from original)
-        chosen_names = [labels[i] for i in chosen]
-        current_item_name = labels[index] if index < n else "LEAF"
-        log_entry = {
-            "node": nodes_visited,
-            "current_item": current_item_name,
-            "weight": round(cw, 2),
-            "profit": round(cp, 2),
-            "chosen": chosen_names,
-            "status": "Eksplorasi",
-        }
-        exploration_log.append(log_entry)
+        if visualize:
+            # Logging (preserved from original)
+            chosen_names = [labels[i] for i in chosen]
+            current_item_name = labels[index] if index < n else "LEAF"
+            log_entry = {
+                "node": current_node_id,
+                "parent": parent_id,
+                "current_item": current_item_name,
+                "weight": round(cw, 2),
+                "profit": round(cp, 2),
+                "chosen": chosen_names,
+                "status": "Eksplorasi",
+            }
+            exploration_log.append(log_entry)
 
         if cp > best_profit:
             best_profit = cp
@@ -90,24 +94,31 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
             if potential_profit > best_profit:
                 best_profit = potential_profit
                 best_indices = chosen + tuple(range(index, n))
-            log_entry["status"] = "TAKEN ALL (Remaining fit)"
+            
+            if visualize:
+                log_entry["status"] = "TAKEN ALL (Remaining fit)"
+                log_entry["weight"] = round(cw + total_remaining_weight, 2)
+                log_entry["profit"] = round(cp + total_remaining_profit, 2)
+                log_entry["chosen"] = [labels[i] for i in best_indices]
             continue
 
         # --- Optimisation #10: Capacity Pruning ---
         if kapasitas_w - cw < smw[index]:
-            log_entry["status"] = "PRUNED (No item fits)"
+            if visualize:
+                log_entry["status"] = "PRUNED (No item fits)"
             continue
 
         # --- Optimisation #3: pre-recurse bound check ---
         bound = bound_calculate(index, cw, cp)
         if bound <= best_profit:
-            log_entry["status"] = (
-                f"PRUNED (Bound {bound:.2f} <= Best {best_profit:.2f})"
-            )
+            if visualize:
+                log_entry["status"] = (
+                    f"PRUNED (Bound {bound:.2f} <= Best {best_profit:.2f})"
+                )
             continue
 
         # Push exclude branch first (deeper in stack → explored second)
-        stack.append((index + 1, cw, cp, chosen))
+        stack.append((index + 1, cw, cp, chosen, current_node_id))
 
         # Push include branch second (top of stack → explored first)
         w_i = weights[index]
@@ -117,6 +128,7 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
                 cw + w_i,
                 cp + profits[index],
                 chosen + (index,),
+                current_node_id,
             ))
 
     # Reconstruct best combination from indices
