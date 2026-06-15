@@ -64,8 +64,10 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
 
         # Logging (preserved from original)
         chosen_names = [labels[i] for i in chosen]
+        current_item_name = labels[index] if index < n else "LEAF"
         log_entry = {
             "node": nodes_visited,
+            "current_item": current_item_name,
             "weight": round(cw, 2),
             "profit": round(cp, 2),
             "chosen": chosen_names,

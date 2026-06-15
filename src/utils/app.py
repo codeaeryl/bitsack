@@ -10,6 +10,11 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.setrecursionlimit(150000)
 
+import importlib
+import src.core.dfs
+import src.optimize.dfs
+importlib.reload(src.core.dfs)
+importlib.reload(src.optimize.dfs)
 from src.core.dfs import jalankan_dfs_modular as dfs_core
 from src.optimize.dfs import jalankan_dfs_modular as dfs_optimize
 
@@ -116,7 +121,7 @@ with col2:
                 for log in hasil['exploration_log']:
                     node_id = str(log['node'])
                     status = log['status']
-                    item_name = log.get('current_item', 'Item-?')
+                    item_name = log.get('current_item', f"Item-? (Node {log['node']})")
                     depth = depth_map.get(item_name, 0)
                     
                     label_text = f"Node {node_id}\n{item_name}\nProfit: {log['profit']}\nBerat: {log['weight']}"
