@@ -6,8 +6,14 @@ import time
 import glob
 import sys
 
-# src/app.py → project root is one level up
+# src/app.py
+# Modul ini adalah Antarmuka Web Utama (Front-end) dari proyek Knapsack 0/1.
+# Dibangun menggunakan framework Streamlit. Modul ini menghubungkan pengguna dengan
+# mesin algoritma (core/dfs.py dan optimize/dfs.py) secara visual dan interaktif.
+
+# Tambahkan root direktori ke system path agar Python bisa membaca folder 'src'
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+# Meningkatkan batas rekursi untuk mencegah error saat menggunakan algoritma Core pada data besar
 sys.setrecursionlimit(150000)
 
 from src.core.dfs import jalankan_dfs_modular as dfs_core

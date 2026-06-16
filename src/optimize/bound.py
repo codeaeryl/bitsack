@@ -1,6 +1,10 @@
 """
 Upper bound calculation using numpy-accelerated prefix sums and suffix minimums.
 Runtime queries still use bisect on Python lists for fast scalar access.
+
+# src/optimize/bound.py
+# Modul ini berisi kalkulator Batas Atas (Upper Bound) yang sangat dioptimasi menggunakan
+# Array Prefix-Sum (NumPy) dan algoritma Binary Search untuk mencapai kompleksitas waktu O(log N).
 """
 import bisect
 import numpy as np
@@ -10,6 +14,11 @@ class BoundCalculator:
     """
     Preprocessing: O(n) using numpy vectorized cumsum and cummin.
     Per-query: O(log n) using bisect on Python lists.
+    
+    Penjelasan:
+    Kelas ini menyiapkan array awalan (prefix-sum) untuk berat dan profit di awal (Pra-pemrosesan O(n)).
+    Dengan begitu, saat penelusuran DFS memanggil fungsi calculate(), fungsi tidak perlu melakukan
+    looping manual satu-satu (O(n)), melainkan cukup melompat menggunakan pencarian biner (O(log n)).
     """
 
     __slots__ = ('_n', '_kapasitas_w', '_prefix_weight', '_prefix_profit',
@@ -21,7 +30,7 @@ class BoundCalculator:
         self._kapasitas_w = kapasitas_w
         self._ratios = ratios
 
-        # Prefix sums via numpy cumsum
+        # Prefix sums via numpy cumsum (Akumulasi jumlah berat dan profit secara massal)
         w_np = np.array(weights)
         p_np = np.array(profits)
 
@@ -33,11 +42,12 @@ class BoundCalculator:
         pp[0] = 0.0
         np.cumsum(p_np, out=pp[1:])
 
-        # Convert to Python lists for fast bisect lookups
+        # Convert to Python lists for fast bisect lookups (List python biasa lebih cepat untuk pencarian satuan)
         self._prefix_weight = pw.tolist()
         self._prefix_profit = pp.tolist()
 
         # Suffix minimum weights via numpy reverse accumulate
+        # (Mencatat berat barang teringan dari belakang untuk mengaktifkan Capacity Pruning)
         smw = [float('inf')] * (n + 1)
         if n > 0:
             reversed_cummin = np.minimum.accumulate(w_np[::-1])[::-1]
@@ -48,6 +58,9 @@ class BoundCalculator:
         """
         Calculate the fractional upper bound starting from `index`.
         Uses bisect on Python list for O(log n) binary search.
+        
+        Menghitung batas atas pecahan (fractional) menggunakan pencarian biner.
+        Melompat langsung ke indeks barang terakhir yang muat ke dalam sisa tas.
         """
         if current_weight >= self._kapasitas_w:
             return 0.0
