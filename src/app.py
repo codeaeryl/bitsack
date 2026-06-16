@@ -46,16 +46,35 @@ jalankan_opt_btn = st.sidebar.button("Jalankan Algoritma (Versi Optimize)", type
 # FITUR 10: MEMBACA & MENAMPILKAN TABEL INPUT
 # ==========================================
 if selected_file == "📝 Input Manual":
-    df_barang = pd.DataFrame(columns=["label", "weight", "profit"])
+    df_barang = pd.DataFrame({
+        "label": pd.Series(dtype=str),
+        "weight": pd.Series(dtype=int),
+        "profit": pd.Series(dtype=int)
+    })
 elif selected_file:
     csv_path = os.path.join(data_dir, selected_file)
     try:
         df_barang = pd.read_csv(csv_path)
     except FileNotFoundError:
         st.error(f"File CSV tidak ditemukan di: {csv_path}")
-        df_barang = pd.DataFrame(columns=["label", "weight", "profit"])
+        df_barang = pd.DataFrame({
+            "label": pd.Series(dtype=str),
+            "weight": pd.Series(dtype=int),
+            "profit": pd.Series(dtype=int)
+        })
 else:
-    df_barang = pd.DataFrame(columns=["label", "weight", "profit"])
+    df_barang = pd.DataFrame({
+        "label": pd.Series(dtype=str),
+        "weight": pd.Series(dtype=int),
+        "profit": pd.Series(dtype=int)
+    })
+
+# Convert weight and profit columns to integer to satisfy integer requirement
+if not df_barang.empty:
+    if 'weight' in df_barang.columns:
+        df_barang['weight'] = pd.to_numeric(df_barang['weight'], errors='coerce').fillna(0).astype(int)
+    if 'profit' in df_barang.columns:
+        df_barang['profit'] = pd.to_numeric(df_barang['profit'], errors='coerce').fillna(0).astype(int)
 
 # Membagi layar utama menjadi 2 kolom (Kiri untuk Tabel, Kanan untuk Hasil & Pohon)
 col1, col2 = st.columns([1, 2])
@@ -74,8 +93,8 @@ with col1:
             hide_index=True,
             column_config={
                 "label": st.column_config.TextColumn("Nama Barang (ID)", required=True),
-                "weight": st.column_config.NumberColumn("Berat (W)", min_value=0.1, step=0.1, format="%.2f"),
-                "profit": st.column_config.NumberColumn("Profit (P)", min_value=0.1, step=0.1, format="%.2f")
+                "weight": st.column_config.NumberColumn("Berat (W)", min_value=1, step=1, format="%d"),
+                "profit": st.column_config.NumberColumn("Profit (P)", min_value=1, step=1, format="%d")
             }
         )
         st.caption(f"Total barang siap diproses: {len(edited_df)} item")
@@ -95,8 +114,14 @@ with col2:
             fungsi_dfs = dfs_core if jalankan_core_btn else dfs_optimize
             
             with st.spinner(f"Mesin {mesin_aktif} sedang bekerja memproses {len(edited_df)} data..."):
-                # Konversi data editor ke list of dicts
-                data_list = edited_df.to_dict(orient='records')
+                # Konversi data editor ke list of dicts dan pastikan bertipe integer
+                data_list = []
+                for item in edited_df.to_dict(orient='records'):
+                    data_list.append({
+                        "label": str(item["label"]),
+                        "weight": int(float(item["weight"])),
+                        "profit": int(float(item["profit"]))
+                    })
                 
                 # Eksekusi Algoritma
                 start_time = time.time()
@@ -254,7 +279,7 @@ with col2:
         if len(hasil['best_combination']) > 0:
             solusi_df = pd.DataFrame(hasil['best_combination'])
             total_w_solusi = solusi_df['weight'].sum()
-            st.success(f"✅ Kombinasi barang terbaik ditemukan! Total Bobot: {total_w_solusi:.2f} / {kapasitas_w_hasil}")
+            st.success(f"✅ Kombinasi barang terbaik ditemukan! Total Bobot: {int(total_w_solusi)} / {kapasitas_w_hasil}")
             st.dataframe(solusi_df, hide_index=True, use_container_width=True)
         else:
             st.error("Tidak ada barang yang muat di dalam kapasitas tas tersebut.")

@@ -61,11 +61,11 @@ class TestLoadCsv(unittest.TestCase):
 
     def test_first_data_row(self):
         """Verify the first data row matches expected values."""
-        self.assertEqual(self.data[1], ['apple', 1.2, 3.5])
+        self.assertEqual(self.data[1], ['apple', 1, 4])
 
     def test_last_data_row(self):
         """Verify the last data row matches expected values."""
-        self.assertEqual(self.data[10], ['lemon', 0.7, 2.9])
+        self.assertEqual(self.data[10], ['lemon', 1, 3])
 
     def test_labels_are_unique(self):
         """All labels (excluding header) should be unique."""

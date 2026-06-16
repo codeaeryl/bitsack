@@ -48,6 +48,12 @@ def run_cli():
     try:
         df_barang = pd.read_csv(csv_path)
         
+        # Convert weight and profit columns to integer to satisfy integer requirement
+        if 'weight' in df_barang.columns:
+            df_barang['weight'] = pd.to_numeric(df_barang['weight'], errors='coerce').fillna(0).astype(int)
+        if 'profit' in df_barang.columns:
+            df_barang['profit'] = pd.to_numeric(df_barang['profit'], errors='coerce').fillna(0).astype(int)
+        
         # 2. Validasi Syarat Jumlah Barang (Minimal 8)
         jumlah_barang = len(df_barang)
         if jumlah_barang < 8:
@@ -127,7 +133,7 @@ def run_cli():
         
         # 1. Tambahkan Total Bobot
         total_weight = sum(b['weight'] for b in hasil['best_combination'])
-        print(f"⚖️ Total Bobot (Weight) : {total_weight:.2f} / {kapasitas_w}")
+        print(f"⚖️ Total Bobot (Weight) : {int(total_weight)} / {kapasitas_w}")
         
         # 2. Merapikan List Barang Terpilih
         chosen_items = [b['label'] for b in hasil['best_combination']]
