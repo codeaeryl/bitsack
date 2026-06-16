@@ -6,15 +6,10 @@ import time
 import glob
 import sys
 
-# Tambahkan root directory ke sys.path agar bisa import module 'src'
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+# src/app.py → project root is one level up
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.setrecursionlimit(150000)
 
-import importlib
-import src.core.dfs
-import src.optimize.dfs
-importlib.reload(src.core.dfs)
-importlib.reload(src.optimize.dfs)
 from src.core.dfs import jalankan_dfs_modular as dfs_core
 from src.optimize.dfs import jalankan_dfs_modular as dfs_optimize
 
@@ -31,7 +26,7 @@ kapasitas_w = st.sidebar.number_input("Kapasitas Maksimal (W)", min_value=1, val
 
 # Pilihan Sumber Data Dinamis dari Folder 'data'
 current_dir = os.path.dirname(__file__)
-data_dir = os.path.join(current_dir, "../../data")
+data_dir = os.path.join(current_dir, "../data")
 csv_files = glob.glob(os.path.join(data_dir, "*.csv"))
 file_names = ["📝 Input Manual"] + [os.path.basename(f) for f in csv_files]
 
