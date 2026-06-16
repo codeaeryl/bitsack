@@ -263,12 +263,13 @@ with col2:
             except Exception as e:
                 # Fallback ke QuickChart Graphviz API jika binary lokal tidak terinstall
                 try:
-                    import urllib.parse
                     import urllib.request
-                    encoded_dot = urllib.parse.quote(pohon_dfs.source)
-                    api_url = f"https://quickchart.io/graphviz?format=png&graph={encoded_dot}"
-                    req = urllib.request.Request(api_url, headers={'User-Agent': 'Mozilla/5.0'})
-                    with urllib.request.urlopen(req, timeout=5) as response:
+                    import json
+                    api_url = "https://quickchart.io/graphviz"
+                    payload = {"graph": pohon_dfs.source, "format": "png"}
+                    data = json.dumps(payload).encode('utf-8')
+                    req = urllib.request.Request(api_url, data=data, headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'})
+                    with urllib.request.urlopen(req, timeout=10) as response:
                         png_data = response.read()
                 except Exception as api_err:
                     png_data = None

@@ -7,35 +7,28 @@ from .bound import calculate_upper_bound
 # Modul ini berisi logika utama algoritma Branch & Bound menggunakan pendekatan 
 # Depth-First Search (DFS) secara rekursif murni (pemanggilan fungsi ke dalam fungsi itu sendiri).
 
-def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w, time_limit=10.0):
+def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
     """
     Fungsi utama untuk mengeksekusi DFS.
-    Menerima daftar barang, kapasitas tas (W), dan batas waktu maksimal eksekusi.
+    Menerima daftar barang dan kapasitas tas (W).
     """
     # Menyiapkan dan mengurutkan barang berdasarkan rasio profit/berat (Penting untuk optimasi Bound)
     items = siapkan_data_barang(daftar_barang_mentah)
     items = urutkan_berdasarkan_rasio(items)
     
     n = len(items)
-    best_profit = 0.0           # Menyimpan profit tertinggi yang ditemukan sejauh ini
+    best_profit = 0             # Menyimpan profit tertinggi yang ditemukan sejauh ini
     best_combination = []       # Menyimpan kombinasi barang terbaik sejauh ini
     nodes_visited = 0           # Menghitung total node yang dieksplorasi (kiri & kanan)
     exploration_log = []        # Log untuk kebutuhan visualisasi pohon Graphviz di app.py
     
-    # Catat waktu mulai untuk fitur Timeout
-    start_time = time.time()
-    waktu_habis = False
+
 
     def dfs(index, current_weight, current_profit, current_items, parent_node=None):
         """
         Fungsi rekursif untuk menelusuri kemungkinan (Ambil atau Tidak Ambil barang).
         """
-        nonlocal best_profit, best_combination, nodes_visited, waktu_habis
-        
-        # Cek apakah waktu eksekusi sudah melebihi batas (Timeout) untuk mencegah hang
-        if time.time() - start_time > time_limit:
-            waktu_habis = True
-            return
+        nonlocal best_profit, best_combination, nodes_visited
 
         nodes_visited += 1
         current_node_id = nodes_visited
@@ -48,8 +41,8 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w, time_limit=10.0):
             "node": current_node_id,
             "parent": parent_node,
             "current_item": item_evaluasi, 
-            "weight": round(current_weight, 2),
-            "profit": round(current_profit, 2), 
+            "weight": current_weight,
+            "profit": current_profit, 
             "chosen": chosen_names, 
             "status": "Eksplorasi"
         })
@@ -86,9 +79,9 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w, time_limit=10.0):
     dfs(0, 0, 0, [], None)
     
     return {
-        "best_profit": round(best_profit, 2),
+        "best_profit": int(best_profit),
         "best_combination": best_combination,
         "nodes_visited": nodes_visited,
         "exploration_log": exploration_log,
-        "timeout": waktu_habis
+        "timeout": False
     }

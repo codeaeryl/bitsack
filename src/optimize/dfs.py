@@ -31,8 +31,8 @@ def _greedy_solution(weights, profits, n, kapasitas_w):
     Fungsi ini melakukan tebakan awal secara rakus (Greedy).
     Memasukkan barang terbaik secara berurutan sampai tas penuh untuk mendapatkan profit awal (seed).
     """
-    weight = 0.0
-    profit = 0.0
+    weight = 0
+    profit = 0
     chosen = []
     for i in range(n):
         if weight + weights[i] <= kapasitas_w:
@@ -71,7 +71,7 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
 
     # Stack entries: (index, current_weight, current_profit, chosen_indices_tuple, parent_node_id)
     # Ini adalah "Tumpukan" memori buatan sendiri untuk menggantikan sistem Rekursi Python.
-    stack = [(0, 0.0, 0.0, (), None)]
+    stack = [(0, 0, 0, (), None)]
 
     while stack:
         # Ambil tumpukan teratas (LIFO - Last In First Out)
@@ -91,8 +91,8 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
                     "node": current_node_id,
                     "parent": parent_id,
                     "current_item": current_item_name,
-                    "weight": round(cw, 2),
-                    "profit": round(cp, 2),
+                    "weight": cw,
+                    "profit": cp,
                     "chosen": chosen_names,
                     "status": "Eksplorasi",
                 }
@@ -118,8 +118,8 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
             
             if visualize:
                 log_entry["status"] = "TAKEN ALL (Remaining fit)"
-                log_entry["weight"] = round(cw + total_remaining_weight, 2)
-                log_entry["profit"] = round(cp + total_remaining_profit, 2)
+                log_entry["weight"] = cw + total_remaining_weight
+                log_entry["profit"] = cp + total_remaining_profit
                 log_entry["chosen"] = [labels[i] for i in best_indices]
             continue
 
@@ -164,8 +164,9 @@ def jalankan_dfs_modular(daftar_barang_mentah, kapasitas_w):
     ]
 
     return {
-        "best_profit": round(best_profit, 2),
+        "best_profit": int(best_profit),
         "best_combination": best_combination,
         "nodes_visited": nodes_visited,
         "exploration_log": exploration_log,
+        "timeout": False,
     }
