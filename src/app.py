@@ -110,31 +110,50 @@ with col2:
                 if key in st.session_state:
                     del st.session_state[key]
         else:
-            mesin_aktif = "Core" if jalankan_core_btn else "Versi Optimize"
-            fungsi_dfs = dfs_core if jalankan_core_btn else dfs_optimize
+            # Check for empty/invalid values
+            has_invalid = False
+            for item in edited_df.to_dict(orient='records'):
+                label = item.get("label")
+                weight = item.get("weight")
+                profit = item.get("profit")
+                if (not label or pd.isna(label) or 
+                    weight is None or pd.isna(weight) or 
+                    profit is None or pd.isna(profit) or
+                    float(weight) < 1 or float(profit) < 1):
+                    has_invalid = True
+                    break
             
-            with st.spinner(f"Mesin {mesin_aktif} sedang bekerja memproses {len(edited_df)} data..."):
-                # Konversi data editor ke list of dicts dan pastikan bertipe integer
-                data_list = []
-                for item in edited_df.to_dict(orient='records'):
-                    data_list.append({
-                        "label": str(item["label"]),
-                        "weight": int(float(item["weight"])),
-                        "profit": int(float(item["profit"]))
-                    })
+            if has_invalid:
+                st.error("❌ Semua kolom (Label, Berat, Profit) harus diisi dan nilai Berat/Profit minimal 1.")
+                for key in ['hasil', 'waktu_eksekusi', 'mesin_aktif', 'kapasitas_w']:
+                    if key in st.session_state:
+                        del st.session_state[key]
+            else:
+                mesin_aktif = "Core" if jalankan_core_btn else "Versi Optimize"
+                fungsi_dfs = dfs_core if jalankan_core_btn else dfs_optimize
                 
-                # Eksekusi Algoritma
-                start_time = time.time()
-                hasil = fungsi_dfs(data_list, kapasitas_w=kapasitas_w)
-                end_time = time.time()
-                
-                waktu_eksekusi = (end_time - start_time) * 1000
-                
-                # Simpan hasil ke session_state agar tetap tersedia saat rerun
-                st.session_state['hasil'] = hasil
-                st.session_state['waktu_eksekusi'] = waktu_eksekusi
-                st.session_state['mesin_aktif'] = mesin_aktif
-                st.session_state['kapasitas_w'] = kapasitas_w
+                with st.spinner(f"Mesin {mesin_aktif} sedang bekerja memproses {len(edited_df)} data..."):
+                    # Konversi data editor ke list of dicts dan pastikan bertipe integer
+                    data_list = []
+                    for item in edited_df.to_dict(orient='records'):
+                        data_list.append({
+                            "label": str(item["label"]),
+                            "weight": int(float(item["weight"])),
+                            "profit": int(float(item["profit"]))
+                        })
+                    
+                    # Eksekusi Algoritma
+                    start_time = time.time()
+                    hasil = fungsi_dfs(data_list, kapasitas_w=kapasitas_w)
+                    end_time = time.time()
+                    
+                    waktu_eksekusi = (end_time - start_time) * 1000
+                    
+                    # Simpan hasil ke session_state agar tetap tersedia saat rerun
+                    st.session_state['hasil'] = hasil
+                    st.session_state['waktu_eksekusi'] = waktu_eksekusi
+                    st.session_state['mesin_aktif'] = mesin_aktif
+                    st.session_state['kapasitas_w'] = kapasitas_w
 
     # Tampilkan hasil dari session_state (tetap muncul walau tombol download diklik)
     if 'hasil' in st.session_state:
