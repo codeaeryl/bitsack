@@ -1,32 +1,29 @@
 """
-Handles loading data from various sources
+Menangani pemuatan data dari berbagai sumber
 
 # src/utils/loader.py
 # Modul pendukung (Utility) untuk menangani proses pembacaan file mentah (seperti CSV)
 # dan mengonversinya menjadi struktur data dasar Python secara aman.
 """
 
-def _try_numeric(value: str) -> str | int | float:
+def _try_numeric(value: str) -> str | int:
     """
-    Attempt to cast a string to int, then float. Return original string on failure.
+    Mencoba mengubah teks (string) menjadi integer. Mengembalikan teks asli jika gagal.
     
     Fungsi internal untuk menebak tipe data secara otomatis.
-    Jika sebuah teks angka bisa diubah ke Integer (tanpa koma desimal), ubah ke Integer.
-    Jika ada komanya, ubah ke Float. Jika gagal semuanya, biarkan tetap String.
+    Semua input angka akan dipaksa menjadi Integer.
+    Jika gagal, biarkan tetap String.
     """
     try:
-        num = float(value)
-        if num == int(num):
-            return int(num)
-        return num
-    except (ValueError, OverflowError):
+        return int(value)
+    except ValueError:
         return value
 
 
-def load_csv(file_path: str) -> list[list[str | int | float]]:
+def load_csv(file_path: str) -> list[list[str | int]]:
     """
-    Load CSV file into a list object.
-    Numeric values are automatically cast to int or float.
+    Memuat file CSV ke dalam bentuk array/list.
+    Nilai angka akan secara otomatis diubah menjadi integer.
     
     Fungsi utama untuk memuat file CSV ke dalam bentuk array/list Python.
     Memanfaatkan fungsi _try_numeric di atas agar kolom 'weight' dan 'profit' 
@@ -38,6 +35,17 @@ def load_csv(file_path: str) -> list[list[str | int | float]]:
 
     with open(file_path, 'r') as f:
         reader = csv.reader(f)
+        header = next(reader, None)
+        if header:
+            data.append(header)
         for row in reader:
-            data.append([_try_numeric(cell) for cell in row])
+            parsed_row = [_try_numeric(cell) for cell in row]
+            if len(parsed_row) >= 3:
+                w, p = parsed_row[1], parsed_row[2]
+                if not isinstance(w, int) or not isinstance(p, int):
+                    continue
+                
+                if w < 1 or p < 1:
+                    continue
+            data.append(parsed_row)
     return data

@@ -14,6 +14,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 # Solusi: Menaikkan batas rekursi hingga 150.000 untuk mengakomodasi algoritma Core pada data skala 100.000
 sys.setrecursionlimit(150000)
 
+from src.utils.loader import load_csv
+
 def run_cli():
     print("\n" + "="*60)
     print("🎒 Knapsack 0/1 - CLI Sandbox Mode (Fitur Pengujian)")
@@ -95,13 +97,15 @@ def run_cli():
                 "profit": profits
             })
         else:
-            df_barang = pd.read_csv(csv_path)
-            
-            # Convert weight and profit columns to integer to satisfy integer requirement
-            if 'weight' in df_barang.columns:
-                df_barang['weight'] = pd.to_numeric(df_barang['weight'], errors='coerce').fillna(0).astype(int)
-            if 'profit' in df_barang.columns:
-                df_barang['profit'] = pd.to_numeric(df_barang['profit'], errors='coerce').fillna(0).astype(int)
+            raw_data = load_csv(csv_path)
+            if raw_data and len(raw_data) > 1:
+                df_barang = pd.DataFrame(raw_data[1:], columns=raw_data[0])
+                if 'weight' in df_barang.columns:
+                    df_barang['weight'] = df_barang['weight'].astype(int)
+                if 'profit' in df_barang.columns:
+                    df_barang['profit'] = df_barang['profit'].astype(int)
+            else:
+                df_barang = pd.DataFrame()
             
             # 2. Validasi Syarat Jumlah Barang (Minimal 8)
             jumlah_barang = len(df_barang)

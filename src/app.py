@@ -18,6 +18,7 @@ sys.setrecursionlimit(150000)
 
 from src.core.dfs import jalankan_dfs_modular as dfs_core
 from src.optimize.dfs import jalankan_dfs_modular as dfs_optimize
+from src.utils.loader import load_csv
 
 # 1. Pengaturan Dasar Halaman
 st.set_page_config(page_title="Knapsack 0/1 Optimizer", page_icon="🎒", layout="wide")
@@ -54,7 +55,20 @@ if selected_file == "📝 Input Manual":
 elif selected_file:
     csv_path = os.path.join(data_dir, selected_file)
     try:
-        df_barang = pd.read_csv(csv_path)
+        raw_data = load_csv(csv_path)
+        if raw_data and len(raw_data) > 1:
+            df_barang = pd.DataFrame(raw_data[1:], columns=raw_data[0])
+            # Pastikan tipe data kolom Pandas adalah integer
+            if 'weight' in df_barang.columns:
+                df_barang['weight'] = df_barang['weight'].astype(int)
+            if 'profit' in df_barang.columns:
+                df_barang['profit'] = df_barang['profit'].astype(int)
+        else:
+            df_barang = pd.DataFrame({
+                "label": pd.Series(dtype=str),
+                "weight": pd.Series(dtype=int),
+                "profit": pd.Series(dtype=int)
+            })
     except FileNotFoundError:
         st.error(f"File CSV tidak ditemukan di: {csv_path}")
         df_barang = pd.DataFrame({
@@ -69,12 +83,7 @@ else:
         "profit": pd.Series(dtype=int)
     })
 
-# Convert weight and profit columns to integer to satisfy integer requirement
-if not df_barang.empty:
-    if 'weight' in df_barang.columns:
-        df_barang['weight'] = pd.to_numeric(df_barang['weight'], errors='coerce').fillna(0).astype(int)
-    if 'profit' in df_barang.columns:
-        df_barang['profit'] = pd.to_numeric(df_barang['profit'], errors='coerce').fillna(0).astype(int)
+
 
 # Membagi layar utama menjadi 2 kolom (Kiri untuk Tabel, Kanan untuk Hasil & Pohon)
 col1, col2 = st.columns([1, 2])
@@ -105,12 +114,12 @@ with col2:
     if jalankan_core_btn or jalankan_opt_btn:
         if len(edited_df) < 8:
             st.error("❌ Jumlah barang minimal 8.")
-            # Clear previous results from session state if validation fails
+            # Hapus hasil sebelumnya dari session state jika validasi gagal
             for key in ['hasil', 'waktu_eksekusi', 'mesin_aktif', 'kapasitas_w']:
                 if key in st.session_state:
                     del st.session_state[key]
         else:
-            # Check for empty/invalid values
+            # Periksa jika ada nilai yang kosong atau tidak valid
             has_invalid = False
             for item in edited_df.to_dict(orient='records'):
                 label = item.get("label")
