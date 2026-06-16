@@ -36,6 +36,7 @@ bitsack/
     │   ├── dfs.py
     │   └── sort.py
     └── utils/
+        ├── cli.py
         └── loader.py
 ```
 
@@ -67,6 +68,7 @@ Berisi implementasi level lanjut yang difokuskan pada kecepatan dan efisiensi me
 *   `data.py`: Modul persiapan data menggunakan *Struct-of-Arrays* (parallel lists) untuk akses skalar yang lebih cepat di dalam *DFS loop*.
 
 #### 5. `src/utils/` (Utilitas)
+*   `cli.py`: *Command Line Interface* (CLI) *sandbox* standar untuk menguji logika dari kedua mesin (Core dan Optimize) secara *headless* melalui terminal.
 *   `loader.py`: *Helper script* fungsional untuk memuat dan mem-*parsing* file CSV secara generik.
 
 ## ⚙️ Cara Menjalankan Aplikasi
