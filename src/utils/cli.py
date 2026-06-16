@@ -31,39 +31,88 @@ def run_cli():
         return
 
     print("\n📂 Pilih File Data CSV yang ingin diuji:")
+    print("[0] 📝 Input Manual")
     for idx, file_path in enumerate(csv_files):
         file_name = os.path.basename(file_path)
         print(f"[{idx + 1}] {file_name}")
         
     try:
-        pilihan_file = int(input("\nMasukkan nomor file pilihanmu: ")) - 1
-        if pilihan_file < 0 or pilihan_file >= len(csv_files):
+        pilihan_file = int(input("\nMasukkan nomor file pilihanmu: "))
+        if pilihan_file < 0 or pilihan_file > len(csv_files):
             print("❌ Pilihan tidak valid!")
             return
-        csv_path = csv_files[pilihan_file]
+        is_manual = (pilihan_file == 0)
+        if not is_manual:
+            csv_path = csv_files[pilihan_file - 1]
     except ValueError:
         print("❌ Harap masukkan angka yang valid!")
         return
 
     try:
-        df_barang = pd.read_csv(csv_path)
-        
-        # Convert weight and profit columns to integer to satisfy integer requirement
-        if 'weight' in df_barang.columns:
-            df_barang['weight'] = pd.to_numeric(df_barang['weight'], errors='coerce').fillna(0).astype(int)
-        if 'profit' in df_barang.columns:
-            df_barang['profit'] = pd.to_numeric(df_barang['profit'], errors='coerce').fillna(0).astype(int)
-        
-        # 2. Validasi Syarat Jumlah Barang (Minimal 8)
-        jumlah_barang = len(df_barang)
-        if jumlah_barang < 8:
-            print("\n" + "!"*60)
-            print(f"❌ ERROR VALIDASI: File '{os.path.basename(csv_path)}' hanya berisi {jumlah_barang} barang.")
-            print("Syarat tugas mengharuskan input n minimal 8 barang. Proses dihentikan.")
-            print("!"*60 + "\n")
-            return
+        if is_manual:
+            while True:
+                try:
+                    n_input = int(input("\nMasukkan jumlah barang (n) [Minimal 8]: "))
+                    if n_input < 8:
+                        print("❌ ERROR VALIDASI: Syarat tugas mengharuskan input n minimal 8 barang.")
+                        continue
+                    break
+                except ValueError:
+                    print("❌ Harap masukkan angka yang valid!")
             
-        print(f"\n📦 Data Barang Input ({os.path.basename(csv_path)}):")
+            labels = []
+            weights = []
+            profits = []
+            print("\n✍️ Silakan input data barang:")
+            for i in range(n_input):
+                while True:
+                    line = input(f"Barang ke-{i+1} (format: Label,Berat,Profit): ").strip()
+                    parts = [p.strip() for p in line.split(",")]
+                    if len(parts) != 3:
+                        print("❌ Format salah! Harap masukkan: Label, Berat, Profit (contoh: item1,5,10)")
+                        continue
+                    lbl, w_str, p_str = parts
+                    if not lbl:
+                        print("❌ Label tidak boleh kosong!")
+                        continue
+                    try:
+                        w = int(w_str)
+                        p = int(p_str)
+                        if w < 1 or p < 1:
+                            print("❌ Berat dan Profit harus minimal 1!")
+                            continue
+                        labels.append(lbl)
+                        weights.append(w)
+                        profits.append(p)
+                        break
+                    except ValueError:
+                        print("❌ Berat dan Profit harus berupa angka integer!")
+                        continue
+            
+            df_barang = pd.DataFrame({
+                "label": labels,
+                "weight": weights,
+                "profit": profits
+            })
+        else:
+            df_barang = pd.read_csv(csv_path)
+            
+            # Convert weight and profit columns to integer to satisfy integer requirement
+            if 'weight' in df_barang.columns:
+                df_barang['weight'] = pd.to_numeric(df_barang['weight'], errors='coerce').fillna(0).astype(int)
+            if 'profit' in df_barang.columns:
+                df_barang['profit'] = pd.to_numeric(df_barang['profit'], errors='coerce').fillna(0).astype(int)
+            
+            # 2. Validasi Syarat Jumlah Barang (Minimal 8)
+            jumlah_barang = len(df_barang)
+            if jumlah_barang < 8:
+                print("\n" + "!"*60)
+                print(f"❌ ERROR VALIDASI: File '{os.path.basename(csv_path)}' hanya berisi {jumlah_barang} barang.")
+                print("Syarat tugas mengharuskan input n minimal 8 barang. Proses dihentikan.")
+                print("!"*60 + "\n")
+                return
+            
+        print(f"\n📦 Data Barang Input ({'Input Manual' if is_manual else os.path.basename(csv_path)}):")
         print(df_barang.to_string(index=False))
         print("\n" + "-"*60)
         
