@@ -197,17 +197,17 @@ with col2:
                 
                 # Logika warna node berdasarkan jenis pruning / status
                 if log['node'] == best_node_id:
-                    color = "gold" # Emas untuk solusi terbaik
+                    color = "#FFD700" # Emas (Gold) untuk solusi terbaik
                     label_text = f"⭐ Node {node_id}\n{item_name}\nProfit: {log['profit']}\nBerat: {log['weight']}\n(SOLUSI TERBAIK)"
                     pohon_dfs.node(node_id, label_text, shape="box", style="filled,bold", fillcolor=color, fontname="Arial", fontsize="10", penwidth="3")
                 elif status == "PRUNED":
-                    color = "lightsalmon" # Salmon untuk Pruning Kapasitas (tidak muat / PRUNED)
+                    color = "#FFA07A" # Salmon (Light Salmon) untuk Pruning Kapasitas (tidak muat / PRUNED)
                     pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
                 elif status == "LEAF" or item_name == "LEAF":
-                    color = "lightgreen" # Hijau untuk daun/ujung normal
+                    color = "#90EE90" # Hijau (Light Green) untuk daun/ujung normal
                     pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
                 else:
-                    color = "lightblue" # Biru untuk eksplorasi normal
+                    color = "#ADD8E6" # Biru (Light Blue) untuk eksplorasi normal
                     pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
                 
                 # Rekonstruksi Garis (Edge) menggunakan parameter parent_node jika tersedia
