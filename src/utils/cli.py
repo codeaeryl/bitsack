@@ -120,28 +120,9 @@ def run_cli():
         print(df_barang.to_string(index=False))
         print("\n" + "-"*60)
         
-        # 3. Integrasi Pemilihan Modul (Core vs Optimize)
-        print("⚙️ Pilih Mesin Algoritma yang ingin diuji:")
-        print("[1] Modul Core     (Calvin - Standar DFS & Pruning)")
-        print("[2] Modul Optimize (Jayden - Iterative & Heuristik)")
-        
-        try:
-            pilihan_mesin = int(input("\nMasukkan nomor mesin pilihanmu: "))
-            if pilihan_mesin == 1:
-                from src.core.dfs import jalankan_dfs_modular
-                nama_mesin = "Core (Calvin)"
-            elif pilihan_mesin == 2:
-                from src.optimize.dfs import jalankan_dfs_modular
-                nama_mesin = "Optimize (Jayden)"
-            else:
-                print("❌ Pilihan tidak valid!")
-                return
-        except ValueError:
-            print("❌ Harap masukkan angka yang valid!")
-            return
-        except ImportError as e:
-            print(f"❌ Gagal memuat mesin (Pastikan struktur folder benar): {e}")
-            return
+        # 3. Import Modul Algoritma
+        from src.core.dfs import jalankan_dfs_modular
+        nama_mesin = "Core (NumPy-Accelerated)"
 
         # 4. Input Kapasitas Dinamis (W)
         print("\n" + "-"*60)
@@ -152,7 +133,7 @@ def run_cli():
             kapasitas_w = 10
             print("Format salah, menggunakan kapasitas default = 10")
 
-        print(f"\n🚀 Meneruskan data ke mesin {nama_mesin} dengan Kapasitas = {kapasitas_w}...")
+        print(f"\n🚀 Menelusuri data dengan mesin {nama_mesin} | Kapasitas = {kapasitas_w}...")
         
         # Konversi dataframe ke list of dicts
         data_list = df_barang.to_dict(orient='records')
@@ -165,10 +146,10 @@ def run_cli():
         waktu_eksekusi = (end_time - start_time) * 1000
 
         # Menampilkan Langkah Eksplorasi (Fitur Wajib)
-        print("\n🔍 Langkah/Urutan Eksplorasi Node (10 Terakhir):")
+        print("\n🔍 Langkah/Urutan Eksplorasi Node:")
         print(f"{'Node':<8} | {'Item Evaluasi':<15} | {'Profit':<10} | {'Berat':<10} | {'Status'}")
         print("-" * 80)
-        for log in hasil.get('exploration_log', [])[-10:]:
+        for log in hasil.get('exploration_log', []):
             node_str = str(log.get('node', '?'))
             item_str = str(log.get('current_item', '-'))
             profit_str = str(log.get('profit', '?'))

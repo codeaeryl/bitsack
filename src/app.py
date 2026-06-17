@@ -9,7 +9,7 @@ import sys
 # src/app.py
 # Modul ini adalah Antarmuka Web Utama (Front-end) dari proyek Knapsack 0/1.
 # Dibangun menggunakan framework Streamlit. Modul ini menghubungkan pengguna dengan
-# mesin algoritma (core/dfs.py dan optimize/dfs.py) secara visual dan interaktif.
+# mesin algoritma (core/dfs.py) secara visual dan interaktif.
 
 # Tambahkan root direktori ke system path agar Python bisa membaca folder 'src'
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -17,7 +17,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.setrecursionlimit(150000)
 
 from src.core.dfs import jalankan_dfs_modular as dfs_core
-from src.optimize.dfs import jalankan_dfs_modular as dfs_optimize
 from src.utils.loader import load_csv
 
 # 1. Pengaturan Dasar Halaman
@@ -40,8 +39,7 @@ file_names = ["📝 Input Manual"] + [os.path.basename(f) for f in csv_files]
 selected_file = st.sidebar.selectbox("📂 Pilih Dataset", file_names)
 
 st.sidebar.markdown("### 🚀 Eksekusi Algoritma")
-jalankan_core_btn = st.sidebar.button("Jalankan Algoritma (Core)", use_container_width=True)
-jalankan_opt_btn = st.sidebar.button("Jalankan Algoritma (Versi Optimize)", type="primary", use_container_width=True)
+jalankan_btn = st.sidebar.button("Jalankan Algoritma", type="primary", use_container_width=True)
 
 # ==========================================
 # FITUR 10: MEMBACA & MENAMPILKAN TABEL INPUT
@@ -111,11 +109,11 @@ with col1:
 # ------ KOLOM KANAN (Pohon & Statistik) ------
 with col2:
     # Jalankan algoritma dan simpan hasil ke session_state
-    if jalankan_core_btn or jalankan_opt_btn:
+    if jalankan_btn:
         if len(edited_df) < 8:
             st.error("❌ Jumlah barang minimal 8.")
             # Hapus hasil sebelumnya dari session state jika validasi gagal
-            for key in ['hasil', 'waktu_eksekusi', 'mesin_aktif', 'kapasitas_w']:
+            for key in ['hasil', 'waktu_eksekusi', 'kapasitas_w']:
                 if key in st.session_state:
                     del st.session_state[key]
         else:
@@ -134,14 +132,11 @@ with col2:
             
             if has_invalid:
                 st.error("❌ Semua kolom (Label, Berat, Profit) harus diisi dan nilai Berat/Profit minimal 1.")
-                for key in ['hasil', 'waktu_eksekusi', 'mesin_aktif', 'kapasitas_w']:
+                for key in ['hasil', 'waktu_eksekusi', 'kapasitas_w']:
                     if key in st.session_state:
                         del st.session_state[key]
             else:
-                mesin_aktif = "Core" if jalankan_core_btn else "Versi Optimize"
-                fungsi_dfs = dfs_core if jalankan_core_btn else dfs_optimize
-                
-                with st.spinner(f"Mesin {mesin_aktif} sedang bekerja memproses {len(edited_df)} data..."):
+                with st.spinner(f"Algoritma sedang bekerja memproses {len(edited_df)} data..."):
                     # Konversi data editor ke list of dicts dan pastikan bertipe integer
                     data_list = []
                     for item in edited_df.to_dict(orient='records'):
@@ -153,7 +148,7 @@ with col2:
                     
                     # Eksekusi Algoritma
                     start_time = time.time()
-                    hasil = fungsi_dfs(data_list, kapasitas_w=kapasitas_w)
+                    hasil = dfs_core(data_list, kapasitas_w=kapasitas_w)
                     end_time = time.time()
                     
                     waktu_eksekusi = (end_time - start_time) * 1000
@@ -161,7 +156,6 @@ with col2:
                     # Simpan hasil ke session_state agar tetap tersedia saat rerun
                     st.session_state['hasil'] = hasil
                     st.session_state['waktu_eksekusi'] = waktu_eksekusi
-                    st.session_state['mesin_aktif'] = mesin_aktif
                     st.session_state['kapasitas_w'] = kapasitas_w
 
     # Tampilkan hasil dari session_state (tetap muncul walau tombol download diklik)
@@ -175,7 +169,7 @@ with col2:
         # ==========================================
         st.subheader("🌳 Visualisasi Pohon Pencarian")
         
-        if hasil.get('exploration_log') and len(hasil['exploration_log']) <= 1000:
+        if hasil.get('exploration_log'):
             pohon_dfs = graphviz.Digraph()
             pohon_dfs.attr(rankdir='TB')
             
@@ -190,6 +184,7 @@ with col2:
 
             last_seen_at_depth = {}
             node_map = {log['node']: log for log in hasil['exploration_log']}
+            best_node_id = hasil.get('best_node_id')
             
             # Membangun pohon dari log eksplorasi
             for log in hasil['exploration_log']:
@@ -201,18 +196,19 @@ with col2:
                 label_text = f"Node {node_id}\n{item_name}\nProfit: {log['profit']}\nBerat: {log['weight']}"
                 
                 # Logika warna node berdasarkan jenis pruning / status
-                if "PRUNED (Bound" in status:
-                    color = "lightpink" # Merah muda untuk Pruning Batas Atas (Bound)
-                elif "PRUNED (No item fits)" in status:
-                    color = "orange" # Orange untuk Pruning Kapasitas (No Item Fits)
-                elif "TAKEN ALL" in status:
-                    color = "lightgreen" # Hijau untuk Sufficiency Pruning (Remaining Fit)
-                elif item_name == "LEAF":
+                if log['node'] == best_node_id:
+                    color = "gold" # Emas untuk solusi terbaik
+                    label_text = f"⭐ Node {node_id}\n{item_name}\nProfit: {log['profit']}\nBerat: {log['weight']}\n(SOLUSI TERBAIK)"
+                    pohon_dfs.node(node_id, label_text, shape="box", style="filled,bold", fillcolor=color, fontname="Arial", fontsize="10", penwidth="3")
+                elif status == "PRUNED":
+                    color = "lightsalmon" # Salmon untuk Pruning Kapasitas (tidak muat / PRUNED)
+                    pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
+                elif status == "LEAF" or item_name == "LEAF":
                     color = "lightgreen" # Hijau untuk daun/ujung normal
+                    pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
                 else:
                     color = "lightblue" # Biru untuk eksplorasi normal
-                    
-                pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
+                    pohon_dfs.node(node_id, label_text, shape="box", style="filled", fillcolor=color, fontname="Arial", fontsize="10")
                 
                 # Rekonstruksi Garis (Edge) menggunakan parameter parent_node jika tersedia
                 parent_id = log.get('parent')
@@ -235,8 +231,9 @@ with col2:
                         edge_label = " x=0"
                         edge_color = "black"
                         
-                    edge_style = "dashed" if "PRUNED" in status else "solid"
-                    if "PRUNED" in status: edge_color = "red"
+                    is_pruned = "PRUNED" in status or status == "Pruned"
+                    edge_style = "dashed" if is_pruned else "solid"
+                    if is_pruned: edge_color = "red"
                     
                     pohon_dfs.edge(parent_id_str, node_id, label=edge_label, style=edge_style, color=edge_color, fontname="Arial", fontsize="9")
                     
@@ -244,14 +241,20 @@ with col2:
                     
             st.graphviz_chart(pohon_dfs)
             
-            # Legenda Warna (Legend)
-            st.markdown("""
-            **🎨 Legenda Warna Node:**
-            * 🔵 **Biru Muda**: Eksplorasi Normal (Evaluasi keputusan barang saat ini)
-            * 🟢 **Hijau Muda**: Solusi Ujung / LEAF / TAKEN ALL (Selesai diproses atau sisa barang otomatis diambil)
-            * 🔴 **Merah Muda**: Pruning Batas Atas (Bound) (Cabang dihentikan karena tidak berpotensi melebihi profit terbaik)
-            * 🟠 **Jingga (Orange)**: Pruning Kapasitas (Capacity) (Cabang dihentikan karena tidak ada sisa barang yang muat)
-            """)
+            # Legenda Warna (Legend) - Dinamis berdasarkan status yang muncul
+            all_statuses = {log['status'] for log in hasil['exploration_log']}
+            has_leaf = any(log.get('current_item') == 'LEAF' or log.get('status') == 'LEAF' for log in hasil['exploration_log'])
+            
+            legend_lines = ["**🎨 Legenda Warna Node:**"]
+            if best_node_id is not None:
+                legend_lines.append("* ⭐ **Emas (Gold)**: Solusi Terbaik (Node dengan profit optimal)")
+            legend_lines.append("* 🔵 **Biru Muda**: Eksplorasi Normal (Evaluasi keputusan barang saat ini)")
+            if has_leaf:
+                legend_lines.append("* 🟢 **Hijau Muda**: Solusi Ujung / LEAF (Selesai diproses)")
+            if any("PRUNED" in s for s in all_statuses):
+                legend_lines.append("* 🟧 **Salmon**: Pruning / PRUNED (Kapasitas tidak muat)")
+            
+            st.markdown("\n".join(legend_lines))
             
             # Fitur Download Gambar Pohon
             st.markdown("##### 💾 Unduh Grafik Pohon")
@@ -284,9 +287,7 @@ with col2:
                 )
             else:
                 st.error("❌ Gagal membuat gambar PNG (offline & Graphviz tidak terinstall).")
-        else:
-            st.warning(f"⚠️ Fitur Visualisasi Pohon Graphviz dinonaktifkan karena pohon pencarian terlalu besar (> 1000 node) atau dinonaktifkan untuk mencegah browser crash.")
-            st.info("Algoritma tetap sukses memproses seluruh data di belakang layar. Silakan cek hasil akhirnya di bawah!")
+
             
         st.markdown("---")
 
@@ -315,4 +316,4 @@ with col2:
             
         st.markdown("---")
     else:
-        st.info("👈 Tekan salah satu tombol **Jalankan Algoritma** di menu samping untuk memproses data.")
+        st.info("👈 Tekan tombol **Jalankan Algoritma** di menu samping untuk memproses data.")
